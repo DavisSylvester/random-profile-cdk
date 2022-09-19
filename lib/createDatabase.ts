@@ -19,8 +19,8 @@ const createCommonDatabaseProp = (vpc: IVpc) => {
         databaseName: appConfig.DATABASE.name,
         instanceIdentifier: appConfig.DATABASE.name.replace("_", "-"),
         publiclyAccessible: true,
-        credentials: Credentials.fromPassword(appConfig.DATABASE.adminUsername, 
-            SecretValue.unsafePlainText(appConfig.DATABASE.password)),
+        credentials: Credentials.fromPassword(appConfig.DATABASE.adminUsername!, 
+            SecretValue.unsafePlainText(appConfig.DATABASE.password!)),
         vpc,
         vpcSubnets: {
           subnetType: SubnetType.PRIVATE_ISOLATED

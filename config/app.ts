@@ -2,8 +2,8 @@ export const appConfig = {
 
     GLOBAL: {},
     DATABASE: {
-        adminUsername: process.env.DATABASE_USERNAME || 'tsg_admin',
-        password: process.env.DATABASE_PASSWORD || 'Password2022',
+        adminUsername: process.env.DATABASE_USERNAME,
+        password: process.env.DATABASE_PASSWORD,
         name: 'profile_contact'
     },
     VIRTUAL_NETWORK: {
