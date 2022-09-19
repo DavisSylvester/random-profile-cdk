@@ -15,9 +15,9 @@ const createCommonDatabaseProp = (vpc: IVpc) => {
     const props: DatabaseInstanceProps = {
 
         engine: DatabaseInstanceEngine.postgres({ version: PostgresEngineVersion.VER_14_3 }),
-        instanceType: InstanceType.of(InstanceClass.T2, InstanceSize.MICRO),
+        instanceType: InstanceType.of(InstanceClass.T3, InstanceSize.MICRO),
         databaseName: appConfig.DATABASE.name,
-        instanceIdentifier: appConfig.DATABASE.name,
+        instanceIdentifier: appConfig.DATABASE.name.replace("_", "-"),
         publiclyAccessible: true,
         credentials: Credentials.fromPassword(appConfig.DATABASE.adminUsername, 
             SecretValue.unsafePlainText(appConfig.DATABASE.password)),
@@ -29,8 +29,12 @@ const createCommonDatabaseProp = (vpc: IVpc) => {
           
         ],
     };
+    console.log('DatabaseProps:', props);
+
     return props;
+
 };
+
 
 // const createSecurityGroup = () => {
 

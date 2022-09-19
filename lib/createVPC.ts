@@ -31,7 +31,7 @@ const createVpcProps = (scope: Construct) => {
 
             {
                 subnetType: SubnetType.PRIVATE_WITH_EGRESS,
-                name: appConfig.VIRTUAL_NETWORK.PUBLIC.NAME,
+                name: appConfig.VIRTUAL_NETWORK.PRIVATE.NAME,
                 
             }
         ],

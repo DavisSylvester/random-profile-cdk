@@ -2,9 +2,9 @@ export const appConfig = {
 
     GLOBAL: {},
     DATABASE: {
-        adminUsername: process.env.DATABASE_USERNAME || 'admin',
-        password: process.env.DATABASE_PASSWORD || 'admin',
-        name: 'profile-contact'
+        adminUsername: process.env.DATABASE_USERNAME || 'tsg_admin',
+        password: process.env.DATABASE_PASSWORD || 'Password2022',
+        name: 'profile_contact'
     },
     VIRTUAL_NETWORK: {
         CIDR: '172.16.12.0/22',
