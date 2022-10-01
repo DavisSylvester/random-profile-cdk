@@ -1,7 +1,7 @@
 import { Stack, StackProps } from "aws-cdk-lib";
 import { IVpc } from "aws-cdk-lib/aws-ec2";
 import { Construct } from "constructs";
-import { createVPC } from "../lib/createVPC";
+import { createVPC } from "../infrastructure/createVPC";
 
 export class NetworkStack extends Stack {
 

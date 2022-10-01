@@ -6,6 +6,7 @@ import { NetworkStack } from '../stacks/NetworkStack';
 import { DatabaseStack } from '../stacks/DatabaseStack';
 import { StackProps } from 'aws-cdk-lib';
 import * as dotenv from "dotenv";
+import { ApplicationStack } from '../stacks/ApplicationStack';
 
 dotenv.config();
 
@@ -37,4 +38,8 @@ const props: StackProps = {
 };
 
 const dabaseStack = new DatabaseStack(app, 'DatabaseStack', networkStack.vpc, props);
+dabaseStack.addDependency(networkStack);
+
+
+const applicationStack = new ApplicationStack(app, 'ApplicationStack', networkStack.vpc, props);
 dabaseStack.addDependency(networkStack);

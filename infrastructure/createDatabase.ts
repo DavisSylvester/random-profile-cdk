@@ -7,7 +7,7 @@ import { appConfig } from "../config/app";
 export const createDatabase = (scope: Construct, vpc: IVpc) => {
 
     const props = createCommonDatabaseProp(vpc)
-    new DatabaseInstance(scope, 'rnd-db', props);
+    //new DatabaseInstance(scope, 'rnd-db', props);
     createSecurityGroup(scope, vpc)
     const dbInstance = new DatabaseInstance(scope, 'rnd-db', props);
 
@@ -20,11 +20,11 @@ const createCommonDatabaseProp = (vpc: IVpc) => {
 
         engine: DatabaseInstanceEngine.postgres({ version: PostgresEngineVersion.VER_14_3 }),
         instanceType: InstanceType.of(InstanceClass.T3, InstanceSize.MICRO),
-        databaseName: appConfig.DATABASE.name,
-        instanceIdentifier: appConfig.DATABASE.name.replace("_", "-"),
+        databaseName: appConfig.RESOURCES.DATABASE.name,
+        instanceIdentifier: appConfig.RESOURCES.DATABASE.name.replace("_", "-"),
         publiclyAccessible: true,
-        credentials: Credentials.fromPassword(appConfig.DATABASE.adminUsername!,
-            SecretValue.unsafePlainText(appConfig.DATABASE.password!)),
+        credentials: Credentials.fromPassword(appConfig.RESOURCES.DATABASE.adminUsername!,
+            SecretValue.unsafePlainText(appConfig.RESOURCES.DATABASE.password!)),
         vpc,
         vpcSubnets: {
             subnetType: SubnetType.PUBLIC
@@ -33,10 +33,8 @@ const createCommonDatabaseProp = (vpc: IVpc) => {
 
         ],
     };
-    console.log('DatabaseProps:', props);
-
+    
     return props;
-
 };
 
 const generateOutput = (scope: Construct, db: DatabaseInstance) => {
@@ -56,7 +54,7 @@ const createSecurityGroup = (scope: Construct, vpc: IVpc) => {
 
     const devSG = new SecurityGroup(scope, 'random-profile-sg', props);
     devSG.addIngressRule(
-        Peer.ipv4('192.1.1.1'),
+        Peer.ipv4('192.1.1.1/32'),
         Port.tcp(5432),
         'allow Postgres Access to User'
     );
