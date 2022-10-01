@@ -1,6 +1,12 @@
+import { Duration } from "aws-cdk-lib";
+import { Runtime } from "aws-cdk-lib/aws-lambda";
+
 export const appConfig = {
 
-    GLOBAL: {},
+    GLOBAL: {
+        name: 'Random-Profile',
+        environments: ['dev', 'staging', 'prod'],
+    },
     DATABASE: {
         adminUsername: process.env.DATABASE_USERNAME,
         password: process.env.DATABASE_PASSWORD,
@@ -18,6 +24,21 @@ export const appConfig = {
         PUBLIC: {
             CIDR_MASK: 24,
             NAME: 'random-profile-public',
+        }
+    },
+    API: {
+        name: 'Random-Profile-Api',
+        LAMBDAS: {
+            'createClient': {
+                name: `create-client`,
+                runtime: Runtime.NODEJS_16_X,
+                codePath: './resources/functions/profile/index.ts',
+                handler: 'get',
+                duration: Duration.minutes(3),
+                environment: undefined,
+                memory: 128,
+                method: 'get',
+                apiName: 'profile',
         }
     }
 };
