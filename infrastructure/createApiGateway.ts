@@ -54,7 +54,8 @@ const addRoutes = (api: HttpApi) => {
 
 const createLambdaFunctions = (scope: Construct) => {      
 
-    const lambdaConfigProps =  new PropRecordHelper<LambdaNames, LambdaBaseProps>().extractRecordValues(appConfig.RESOURCES.API.LAMBDAS);
+    const lambdaConfigProps =  new PropRecordHelper<LambdaNames, LambdaBaseProps>()
+        .extractRecordValues(appConfig.RESOURCES.API.LAMBDAS);
 
     const listOfProps = createLambdaProps(lambdaConfigProps);
 
@@ -77,7 +78,8 @@ const createLambdaProps = (lambdaProps: LambdaBaseProps[]) => {
     });
 };
 
-const createLambdaIntegrationProps = (prop: LambdaBaseProps, role?: IRole, layers?: LayerVersion[]) => {
+const createLambdaIntegrationProps = (prop: LambdaBaseProps, role?: IRole, 
+    layers?: LayerVersion[]) => {
 
     const lambdaProp: NodejsFunctionProps = {
         entry: path.join(prop.codePath),        
