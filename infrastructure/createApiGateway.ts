@@ -1,28 +1,65 @@
 import { Construct } from "constructs";
-import { AddRoutesOptions, HttpApi, HttpApiProps, HttpMethod, HttpStage, IHttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
+import { DomainName, EndpointType, HttpApi, HttpApiProps, HttpMethod, HttpStage, IHttpApi } from "@aws-cdk/aws-apigatewayv2-alpha";
 import { appConfig } from "../config/app";
 import { NodejsFunction, NodejsFunctionProps, SourceMapMode } from "aws-cdk-lib/aws-lambda-nodejs";
 import { LambdaBaseProps } from "./interfaces/lambdaBaseProps";
 import * as path from "path";
-import { Duration } from "aws-cdk-lib";
+import { CfnOutput, Duration } from "aws-cdk-lib";
 import { IRole } from "aws-cdk-lib/aws-iam";
 import { LayerVersion } from "aws-cdk-lib/aws-lambda";
 import { PropRecordHelper } from "../config/helpers/propHelper";
 import { LambdaNames } from "../config/classes/types/lambdaNames";
+import { HttpLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
+import { HttpVerbs } from "../config/classes/types/HttpVerbs";
+import { Certificate, ICertificate } from "aws-cdk-lib/aws-certificatemanager";
+import { Bucket } from "aws-cdk-lib/aws-s3";
+import { ARecord, CnameRecord, HostedZone, RecordTarget } from "aws-cdk-lib/aws-route53";
+import { ApiGateway } from "aws-cdk-lib/aws-events-targets";
+import { IDomain } from "aws-cdk-lib/aws-opensearchservice";
+import { Domain } from "domain";
+import { IDomainName } from "aws-cdk-lib/aws-apigateway";
 
-export const createApiGateway = (scope: Construct) => {
 
+export const createApiGateway = (scope: Construct, cert: ICertificate) => {
 
-    const restApi = createRestApi(scope);
+    const lambdaConfigProps = new PropRecordHelper<LambdaNames, LambdaBaseProps>()
+        .extractRecordValues(appConfig.RESOURCES.API.LAMBDAS);
+    const domainName = addCert(scope, cert);
+
+    const zone = HostedZone.fromHostedZoneAttributes(scope, `${appConfig.GLOBALS.name}-hosted-zone-apigateway`,
+        {
+            hostedZoneId: appConfig.RESOURCES.DNS.zoneId,
+            zoneName: appConfig.RESOURCES.DNS.domainName
+        });
+    
+    const restApi = createRestApi(scope, domainName);
     const stages = createStages(scope, restApi);
+    const lambdas = createLambdaFunctions(scope, lambdaConfigProps);
+    addRoutesToApi(restApi, lambdas, lambdaConfigProps);
 
+    const apiUrl = restApi.apiId;
+    console.log('apiUrl: ', apiUrl);
+    new CnameRecord(scope, `CnameApiRecord`, {
+        recordName: appConfig.RESOURCES.DNS.apiSubDomain.split('.')[0],
+        zone,
+        domainName: apiUrl,
+      });
+
+    createLambdaOutput(scope, lambdas);
+    createApiOutput(scope, [restApi]);
 };
 
-const createRestApi = (scope: Construct) => {
+const createRestApi = (scope: Construct, domain: DomainName) => {
+
+    
 
     const props: HttpApiProps = {
         apiName: appConfig.RESOURCES.API.name,
-        description: appConfig.RESOURCES.API.description
+        description: appConfig.RESOURCES.API.description,
+        defaultDomainMapping: {
+            domainName: domain,
+            
+          },
     };
 
     const rootApi = new HttpApi(scope, appConfig.RESOURCES.API.name, props);
@@ -43,23 +80,12 @@ const createStages = (scope: Construct, api: IHttpApi) => {
     return stages;
 };
 
-
-
-const addRoutes = (api: HttpApi) => {
-
-    
-    
-    api.addRoutes(props);
-};
-
-const createLambdaFunctions = (scope: Construct) => {      
-
-    const lambdaConfigProps =  new PropRecordHelper<LambdaNames, LambdaBaseProps>()
-        .extractRecordValues(appConfig.RESOURCES.API.LAMBDAS);
+const createLambdaFunctions = (scope: Construct, lambdaConfigProps: LambdaBaseProps[]) => {
 
     const listOfProps = createLambdaProps(lambdaConfigProps);
 
     const createdLambdas: NodejsFunction[] = createLambdaFunction(scope, listOfProps);
+
 
     return createdLambdas;
 }
@@ -67,24 +93,24 @@ const createLambdaFunctions = (scope: Construct) => {
 const createLambdaFunction = (scope: Construct, listOfProps: NodejsFunctionProps[]) => {
 
     return listOfProps.map((prop) => {
-        return new NodejsFunction(scope, prop.name, prop);
+        return new NodejsFunction(scope, prop.functionName!, prop);
     });
-    
+
 };
 
 const createLambdaProps = (lambdaProps: LambdaBaseProps[]) => {
-    return lambdaProps.map((prop) => { 
+    return lambdaProps.map((prop) => {
         return createLambdaIntegrationProps(prop)
     });
 };
 
-const createLambdaIntegrationProps = (prop: LambdaBaseProps, role?: IRole, 
+const createLambdaIntegrationProps = (prop: LambdaBaseProps, role?: IRole,
     layers?: LayerVersion[]) => {
 
     const lambdaProp: NodejsFunctionProps = {
-        entry: path.join(prop.codePath),        
-        functionName: prop.name,        
-        handler: prop.handler,        
+        entry: path.join(prop.codePath),
+        functionName: prop.name,
+        handler: prop.handler,
         runtime: prop.runtime || appConfig.GLOBALS.stackRuntime,
         timeout: prop.duration || Duration.minutes(2),
         memorySize: prop.memory || 256,
@@ -101,9 +127,92 @@ const createLambdaIntegrationProps = (prop: LambdaBaseProps, role?: IRole,
         },
         role,
         layers
-        
+
     }
     return lambdaProp;
 
 
 };
+
+const addRoutesToApi = (httpApi: HttpApi, lambdas: NodejsFunction[],
+    lambdaConfigProps: LambdaBaseProps[]) => {
+
+    lambdaConfigProps.map((config, idx) => {
+        const integration = new HttpLambdaIntegration(`integration-${config.name}`, lambdas[idx]);
+
+        httpApi.addRoutes({
+            path: config.path,
+            methods: [ getUsableHttpVerb(config.method || 'get')],
+            integration: integration,
+        });
+    });
+};
+
+const getUsableHttpVerb = (verb: HttpVerbs) => {
+
+    switch (verb.toLowerCase()) {
+        case "get":
+            return HttpMethod.GET;
+
+        case "post":
+            return HttpMethod.POST;
+
+        case "patch":
+            return HttpMethod.PATCH;
+
+        case "put":
+            return HttpMethod.PUT;
+
+        case "delete":
+            return HttpMethod.DELETE;
+        default:
+            throw new Error(`${verb} is not a supported Http Verb`);            
+           
+    }
+};
+
+const createLambdaOutput = (scope: Construct, lambdas: NodejsFunction[]) => {
+    lambdas.forEach((lambda, idx) => {
+
+        new CfnOutput(scope, `lambdas${idx}`, {
+            exportName: 'Function-Name',
+            value: lambda.functionName
+        });
+    });
+};
+
+const createApiOutput = (scope: Construct, apis: HttpApi[]) => {
+    apis.forEach((api, idx) => {
+
+        new CfnOutput(scope, `api-${idx}`, {
+            exportName: 'Http-API-Name',
+            value: api.defaultStage?.domainUrl!
+        });
+    });
+};
+
+
+const addCert = (scope: Construct, cert: ICertificate) => {
+    const customDomain = new DomainName(scope, `${appConfig.RESOURCES.DNS.apiSubDomain}-gateway`, {
+        domainName: appConfig.RESOURCES.DNS.apiSubDomain,        
+        certificate: Certificate.fromCertificateArn(scope, 'cert', 
+        cert.certificateArn),
+        endpointType: EndpointType.REGIONAL,
+        
+        
+      });
+
+      
+
+      return customDomain;
+};
+
+// const addCNameRecord = (scope: Construct, restApi: IHttpApi) => {
+//     new CnameRecord(scope, "apiDNS", {
+//         zone: zone,
+//         domainName: appConfig.RESOURCES.DNS.domainName,
+//         recordName: appConfig.RESOURCES.DNS.apiSubDomain.split('.')[2]
+
+        
+//       });
+// };

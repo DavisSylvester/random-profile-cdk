@@ -20,7 +20,7 @@ export const appConfig: AppConfigParams = {
         VIRTUAL_NETWORK: {
             CIDR: '172.16.12.0/22',
             Subnets: {
-                RDS: {
+                DATABASE: {
                     CIDR_MASK: 28,
                     NAME: 'random-profile-private-db'
                 },
@@ -47,12 +47,19 @@ export const appConfig: AppConfigParams = {
                     memory: 128,
                     method: 'get',
                     apiName: 'profile',
+                    path: '/'
                 },
             },
         },
         CICD: {
             name: '',
             repoName: ''
+        },
+        DNS: {
+            domainName: process.env.HOSTED_DOMAIN_NAME!,
+            zoneId: process.env.HOSTED_ZONE_ID!,
+            apiSubDomain: `${process.env.API_SUB_DOMAIN!}.${process.env.HOSTED_DOMAIN_NAME}`,
+        
         }
     },
 

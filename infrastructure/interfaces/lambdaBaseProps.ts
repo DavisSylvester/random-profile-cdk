@@ -1,5 +1,6 @@
 import { Duration } from "aws-cdk-lib";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
+import { HttpVerbs } from "../../config/classes/types/HttpVerbs";
 
 export interface LambdaBaseProps {
     name: string;    
@@ -9,6 +10,7 @@ export interface LambdaBaseProps {
     environment?: { [name: string]: string };
     runtime?: Runtime;
     memory?: number;
-    method?: "get" | "post" | "delete" | "put" | "patch";
+    method?: HttpVerbs;
     apiName: string;
+    path: string;
 }

@@ -14,24 +14,24 @@ const createVpcProps = (scope: Construct) => {
     const props: VpcProps = {
 
         vpcName: 'random-profile-vpc',
-        cidr: appConfig.VIRTUAL_NETWORK.CIDR,
+        cidr: appConfig.RESOURCES.VIRTUAL_NETWORK.CIDR,
         subnetConfiguration: [
             {
                 subnetType: SubnetType.PRIVATE_ISOLATED,
-                name: appConfig.VIRTUAL_NETWORK.RDS.NAME,
-                cidrMask: appConfig.VIRTUAL_NETWORK.RDS.CIDR_MASK,
+                name: appConfig.RESOURCES.VIRTUAL_NETWORK.Subnets.DATABASE.NAME,
+                cidrMask: appConfig.RESOURCES.VIRTUAL_NETWORK.Subnets.DATABASE.CIDR_MASK,
                 
             },
 
             {
                 subnetType: SubnetType.PUBLIC,
-                name: appConfig.VIRTUAL_NETWORK.PUBLIC.NAME,
-                cidrMask: appConfig.VIRTUAL_NETWORK.PUBLIC.CIDR_MASK
+                name: appConfig.RESOURCES.VIRTUAL_NETWORK.Subnets.PUBLIC.NAME,
+                cidrMask: appConfig.RESOURCES.VIRTUAL_NETWORK.Subnets.PUBLIC.CIDR_MASK
             },
 
             {
                 subnetType: SubnetType.PRIVATE_WITH_EGRESS,
-                name: appConfig.VIRTUAL_NETWORK.PRIVATE.NAME,
+                name: appConfig.RESOURCES.VIRTUAL_NETWORK.Subnets.PRIVATE.NAME,
                 
             }
         ],

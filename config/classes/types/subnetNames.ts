@@ -1,0 +1,1 @@
+export type SubnetName = 'DATABASE' | 'PRIVATE' | 'PUBLIC';
