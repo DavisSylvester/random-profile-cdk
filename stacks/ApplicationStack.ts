@@ -8,9 +8,9 @@ export class ApplicationStack extends Stack {
     constructor(scope: Construct, id: string, vpc: IVpc, props?: StackProps) {
         super(scope, id, props);
 
-        const cert = createRoute53(this);
+       const cert = createRoute53(this);
         const db = createApiGateway(this, cert);
-
+        
 
     }
 }
