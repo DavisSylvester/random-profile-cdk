@@ -9,16 +9,13 @@ import { IRole } from "aws-cdk-lib/aws-iam";
 import { LayerVersion } from "aws-cdk-lib/aws-lambda";
 import { PropRecordHelper } from "../config/helpers/propHelper";
 import { LambdaNames } from "../config/classes/types/lambdaNames";
-import { HttpLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
 import { HttpVerbs } from "../config/classes/types/HttpVerbs";
 import { Certificate, ICertificate } from "aws-cdk-lib/aws-certificatemanager";
-import { Bucket } from "aws-cdk-lib/aws-s3";
-import { ARecord, CnameRecord, HostedZone, RecordTarget } from "aws-cdk-lib/aws-route53";
-import { ApiGateway } from "aws-cdk-lib/aws-events-targets";
-import { IDomain } from "aws-cdk-lib/aws-opensearchservice";
-import { Domain } from "domain";
-import { IDomainName } from "aws-cdk-lib/aws-apigateway";
-import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
+import { CnameRecord } from "aws-cdk-lib/aws-route53";
+import { HostedZone } from "aws-cdk-lib/aws-route53";
+import { HttpLambdaIntegration } from "@aws-cdk/aws-apigatewayv2-integrations-alpha";
+
+
 
 export const createApiGateway = (scope: Construct, cert: ICertificate) => {
 
@@ -48,13 +45,27 @@ export const createApiGateway = (scope: Construct, cert: ICertificate) => {
         recordName: appConfig.RESOURCES.DNS.apiSubDomain.split('.')[0],
         zone,
         domainName: domainName.regionalDomainName,
-      });
+    });
+    // new CnameRecord(scope, `CnameApiRecord`, {
+    //     recordName: appConfig.RESOURCES.DNS.apiSubDomain.split('.')[0],
+    //     zone,
+    //     domainName: apiUrl,
+    //   });
+
+    //   new ARecord(scope, "apiDNS", {
+    //     zone,
+    //     recordName: "api-test",
+    //     target: RecordTarget.fromAlias(
+    //       new HttpApi(restApi)
+    //     ),
+    //   });
       
     createLambdaOutput(scope, lambdas);
     createApiOutput(scope, [restApi]);
 };
 
-const createRestApi = (scope: Construct, domain: DomainName) => {   
+// const createRestApi = (scope: Construct, domain: DomainName) => {   
+const createRestApi = (scope: Construct, domain: DomainName): HttpApi => {
 
     const props: HttpApiProps = {
         apiName: appConfig.RESOURCES.API.name,

@@ -1,6 +1,8 @@
 import { CfnOutput } from "aws-cdk-lib";
+import { IRestApi, RestApi } from "aws-cdk-lib/aws-apigateway";
 import { Certificate, CertificateValidation } from "aws-cdk-lib/aws-certificatemanager";
-import { HostedZone } from "aws-cdk-lib/aws-route53";
+import { ARecord, HostedZone, RecordTarget } from "aws-cdk-lib/aws-route53";
+import { ApiGateway } from "aws-cdk-lib/aws-route53-targets";
 import { Construct } from "constructs";
 import { appConfig } from "../config/app";
 
@@ -13,7 +15,7 @@ export const createRoute53 = (scope: Construct) => {
         domainName: appConfig.RESOURCES.DNS.apiSubDomain,
         validation: CertificateValidation.fromDns(myHostedZone),
       });
-      
+    
     new CfnOutput(scope, `${appConfig.GLOBALS.name}-certificate-output`, {
         value: cert.certificateArn,        
     });
