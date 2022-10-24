@@ -18,7 +18,7 @@ import { ApiGateway } from "aws-cdk-lib/aws-events-targets";
 import { IDomain } from "aws-cdk-lib/aws-opensearchservice";
 import { Domain } from "domain";
 import { IDomainName } from "aws-cdk-lib/aws-apigateway";
-
+import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 
 export const createApiGateway = (scope: Construct, cert: ICertificate) => {
 
@@ -39,26 +39,28 @@ export const createApiGateway = (scope: Construct, cert: ICertificate) => {
 
     const apiUrl = restApi.apiId;
     console.log('apiUrl: ', apiUrl);
-    new CnameRecord(scope, `CnameApiRecord`, {
+
+    // new ARecord(scope, 'apiAliasRecord', {
+    //     zone: zone,
+    //     target: RecordTarget.fromAlias(new route53Targets.ApiGatewayv2DomainProperties(domain))
+    //   })
+    const cname = new CnameRecord(scope, `CnameApiRecord`, {
         recordName: appConfig.RESOURCES.DNS.apiSubDomain.split('.')[0],
         zone,
-        domainName: apiUrl,
+        domainName: domainName.regionalDomainName,
       });
-
+      
     createLambdaOutput(scope, lambdas);
     createApiOutput(scope, [restApi]);
 };
 
-const createRestApi = (scope: Construct, domain: DomainName) => {
-
-    
+const createRestApi = (scope: Construct, domain: DomainName) => {   
 
     const props: HttpApiProps = {
         apiName: appConfig.RESOURCES.API.name,
         description: appConfig.RESOURCES.API.description,
         defaultDomainMapping: {
-            domainName: domain,
-            
+            domainName: domain,            
           },
     };
 
