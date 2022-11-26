@@ -27,7 +27,7 @@ export const createEC2 = (scope: Construct, vpc: IVpc) => {
         vpc,
     });
 
-    new Instance(scope, `web-server-${name}`, {
+    const webServer = new Instance(scope, `web-server-${name}`, {
 
         vpc,
         vpcSubnets: {
@@ -42,7 +42,7 @@ export const createEC2 = (scope: Construct, vpc: IVpc) => {
         securityGroup: developerSecurityGroup,
     });
 
-    new Instance(scope, `vpn-server`, {
+    const vpnServer = new Instance(scope, `vpn-server`, {
 
         vpc,
         vpcSubnets: {
@@ -57,7 +57,7 @@ export const createEC2 = (scope: Construct, vpc: IVpc) => {
         securityGroup: developerSecurityGroup,
     });
 
-    new Instance(scope, `vpn-server-2`, {
+    const vpnServer2 = new Instance(scope, `vpn-server-2`, {
 
         vpc,
         vpcSubnets: {
@@ -72,12 +72,15 @@ export const createEC2 = (scope: Construct, vpc: IVpc) => {
         securityGroup: developerSecurityGroup,
     });
 
-
-
     developerSecurityGroup.addIngressRule(Peer.anyIpv4(), Port.tcp(80), 'httpIpv4');
     developerSecurityGroup.addIngressRule(Peer.anyIpv6(), Port.tcp(80), 'httpIpv6');
-    developerSecurityGroup.addIngressRule(Peer.ipv4("162.248.14.89/32"), Port.tcp(22), 'ssh');
+    developerSecurityGroup.addIngressRule(Peer.ipv4("162.248.14.89/32"), Port.allTraffic());
 
+    return [
+        webServer,
+        vpnServer,
+        vpnServer2
+    ];
 };
 
 
