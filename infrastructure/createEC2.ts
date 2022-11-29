@@ -1,4 +1,4 @@
-import { CfnKeyPair, Instance, InstanceClass, InstanceSize, InstanceType, IVpc, MachineImage, OperatingSystemType, Peer, Port, SecurityGroup, SubnetType } from "aws-cdk-lib/aws-ec2";
+import { CfnKeyPair, Instance, InstanceClass, InstanceSize, InstanceType, IVpc, MachineImage, OperatingSystemType, Peer, Port, SecurityGroup, SubnetType, UserData } from "aws-cdk-lib/aws-ec2";
 import { Construct } from "constructs";
 
 
@@ -23,6 +23,11 @@ export const createEC2 = (scope: Construct, vpc: IVpc) => {
         }
     );
 
+    const mi2 = MachineImage.genericLinux({
+        ["us-east-1"]: 'ami-002070d43b0a4f171',
+        }
+    );
+
     const developerSecurityGroup = new SecurityGroup(scope, 'developer-security-group', {
         vpc,
     });
@@ -36,10 +41,11 @@ export const createEC2 = (scope: Construct, vpc: IVpc) => {
         instanceType: InstanceType.of(InstanceClass.T2, InstanceSize.MICRO),
         // machineImage: 'ami-0aedf6b1cb669b4c7' // CentOS
         // 'ami-08ad748ca6d229b62', // Ubuntu 22.10
-        machineImage: mi,
+        machineImage: mi2,
         keyName: 'davis-samsung', // kpResult.keyName
         instanceName: name,
         securityGroup: developerSecurityGroup,
+        userData
     });
 
     const vpnServer = new Instance(scope, `vpn-server`, {
@@ -55,6 +61,7 @@ export const createEC2 = (scope: Construct, vpc: IVpc) => {
         keyName: 'davis-samsung', // kpResult.keyName
         instanceName: `vpn-server-01`,
         securityGroup: developerSecurityGroup,
+        userData
     });
 
     const vpnServer2 = new Instance(scope, `vpn-server-2`, {
@@ -70,6 +77,7 @@ export const createEC2 = (scope: Construct, vpc: IVpc) => {
         keyName: 'davis-samsung', // kpResult.keyName
         instanceName: `vpn-server-02`,
         securityGroup: developerSecurityGroup,
+        userData
     });
 
     developerSecurityGroup.addIngressRule(Peer.anyIpv4(), Port.tcp(80), 'httpIpv4');
@@ -83,4 +91,22 @@ export const createEC2 = (scope: Construct, vpc: IVpc) => {
     ];
 };
 
+
+const userData = UserData.forLinux();
+userData.addCommands(
+    // 'apt update',
+    // 'apt upgrade',
+    // 'apt update',
+    // 'apt install openvpn easy-rsa',
+    'sudo apt install -y unzip',
+    'curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"',
+    'unzip awscliv2.zip',
+    'sudo ./aws/install',
+    'aws s3 cp s3://project-artifact-folder/web-server-command.sh .',
+    'sudo chmod +x web-server-command.sh',
+    './web-server-command.sh',
+    '',
+    '',
+    '',
+);
 

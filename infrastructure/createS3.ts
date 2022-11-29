@@ -10,7 +10,7 @@ export const createS3 = (scope: Construct, ec2: Instance[]) => {
 
         bucketName: 'project-artifact-folder',
         removalPolicy: RemovalPolicy.DESTROY,
-
+        autoDeleteObjects: true,
     });
 
     new BucketDeployment(scope, 'DeployWebsite', {

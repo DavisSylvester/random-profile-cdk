@@ -5,14 +5,18 @@ import { Construct } from "constructs";
 export const createVpnServer = (scope: Construct, vpc: IVpc) => {
     const userData = UserData.forLinux();
     userData.addCommands(
-        'apt update',
-        'apt upgrade',
-        'apt update',
-        'apt install openvpn easy-rsa',
-        '',
-        '',
-        '',
-        '',
+        // 'apt update',
+        // 'apt upgrade',
+        // 'apt update',
+        // 'apt install openvpn easy-rsa',
+        'sudo apt install -y unzip',
+        'curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"',
+        'unzip awscliv2.zip',
+        'sudo ./aws/install',
+        'sudo aws s3 cp s3://project-artifact-folder/web-server-command.sh web-server-command.sh',
+        'sudo chmod +x web-server-command.sh',
+        'sudo ./web-server-command.sh',
+        
     );
 
 
